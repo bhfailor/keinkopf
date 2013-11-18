@@ -1,0 +1,2 @@
+module ConspectusHelper
+end
