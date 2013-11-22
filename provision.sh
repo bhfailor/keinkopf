@@ -7,7 +7,7 @@ sudo apt-get install curl
 source ~/.rvm/scripts/rvm
 rvm
 rvm requirements
-rvm install ruby-1.9.3-p448
+rvm install ruby-1.9.3-p484
 rvm use 1.9.3
 rvm use 1.9.3 --default
 echo "gem: --no-document" >> ~/.gemrc
