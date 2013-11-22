@@ -1,15 +1,16 @@
 #!/bin/bash
 # ~/keinkopf/provision.sh
-# should be executed from ~/
+# should be executed using: ./keinkopf/provision.sh
 sudo apt-get update
 sudo apt-get install curl
 \curl -L https://get.rvm.io | bash -s stable
-source /home/vagrant/.rvm/scripts/rvm
+source ~/.rvm/scripts/rvm
 rvm
 rvm requirements
 rvm install ruby-1.9.3-p448
 rvm use 1.9.3
 rvm use 1.9.3 --default
+echo "gem: --no-document" >> ~/.gemrc
 rvm rubygems current
 gem install rails
 sudo apt-get install python-software-properties
