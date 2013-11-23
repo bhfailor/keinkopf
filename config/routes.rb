@@ -1,4 +1,7 @@
 KeinKopf::Application.routes.draw do
+  resources :mlp_queries
+
+
   get "conspectus/summarize"
 
   # The priority is based upon order of creation:

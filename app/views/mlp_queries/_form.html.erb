@@ -1,0 +1,41 @@
+<%= form_for(@mlp_query) do |f| %>
+  <% if @mlp_query.errors.any? %>
+    <div id="error_explanation">
+      <h2><%= pluralize(@mlp_query.errors.count, "error") %> prohibited this mlp_query from being saved:</h2>
+
+      <ul>
+      <% @mlp_query.errors.full_messages.each do |msg| %>
+        <li><%= msg %></li>
+      <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div class="field">
+    <%= f.label :session %><br />
+    <%= f.text_field :session %>
+  </div>
+  <div class="field">
+    <%= f.label :class_start %><br />
+    <%= f.datetime_select :class_start %>
+  </div>
+  <div class="field">
+    <%= f.label :class_stop %><br />
+    <%= f.datetime_select :class_stop %>
+  </div>
+  <div class="field">
+    <%= f.label :semester %><br />
+    <%= f.text_field :semester %>
+  </div>
+  <div class="field">
+    <%= f.label :section %><br />
+    <%= f.number_field :section %>
+  </div>
+  <div class="field">
+    <%= f.label :mlp_login_email %><br />
+    <%= f.text_field :mlp_login_email %>
+  </div>
+  <div class="actions">
+    <%= f.submit %>
+  </div>
+<% end %>

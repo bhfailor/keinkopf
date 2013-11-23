@@ -11,6 +11,17 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 0) do
+ActiveRecord::Schema.define(:version => 20131123135925) do
+
+  create_table "mlp_queries", :force => true do |t|
+    t.string   "session"
+    t.datetime "class_start"
+    t.datetime "class_stop"
+    t.string   "semester"
+    t.integer  "section"
+    t.datetime "created_at",      :null => false
+    t.datetime "updated_at",      :null => false
+    t.string   "mlp_login_email"
+  end
 
 end

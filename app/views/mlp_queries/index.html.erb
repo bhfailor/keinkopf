@@ -1,0 +1,33 @@
+<h1>Listing mlp_queries</h1>
+
+<table>
+  <tr>
+    <th>Session</th>
+    <th>Class start</th>
+    <th>Class stop</th>
+    <th>Semester</th>
+    <th>Section</th>
+    <th>MLP login email</th>
+    <th></th>
+    <th></th>
+    <th></th>
+  </tr>
+
+<% @mlp_queries.each do |mlp_query| %>
+  <tr>
+    <td><%= mlp_query.session %></td>
+    <td><%= mlp_query.class_start %></td>
+    <td><%= mlp_query.class_stop %></td>
+    <td><%= mlp_query.semester %></td>
+    <td><%= mlp_query.section %></td>
+    <td><%= mlp_query.mlp_login_email %></td>
+    <td><%= link_to 'Show', mlp_query %></td>
+    <td><%= link_to 'Edit', edit_mlp_query_path(mlp_query) %></td>
+    <td><%= link_to 'Destroy', mlp_query, method: :delete, data: { confirm: 'Are you sure?' } %></td>
+  </tr>
+<% end %>
+</table>
+
+<br />
+
+<%= link_to 'New Mlp query', new_mlp_query_path %>

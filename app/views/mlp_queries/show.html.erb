@@ -1,0 +1,34 @@
+<p id="notice"><%= notice %></p>
+
+<p>
+  <b>Session:</b>
+  <%= @mlp_query.session %>
+</p>
+
+<p>
+  <b>Class start:</b>
+  <%= @mlp_query.class_start %>
+</p>
+
+<p>
+  <b>Class stop:</b>
+  <%= @mlp_query.class_stop %>
+</p>
+
+<p>
+  <b>Semester:</b>
+  <%= @mlp_query.semester %>
+</p>
+
+<p>
+  <b>Section:</b>
+  <%= @mlp_query.section %>
+</p>
+
+<p>
+  <b>MLP login email:</b>
+  <%= @mlp_query.mlp_login_email %>
+</p>
+
+<%= link_to 'Edit', edit_mlp_query_path(@mlp_query) %> |
+<%= link_to 'Back', mlp_queries_path %>
