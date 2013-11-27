@@ -76,8 +76,23 @@ class MlpQueriesController < ApplicationController
     @mlp_query.destroy
 
     respond_to do |format|
-      format.html { redirect_to mlp_queries_url }
+      format.html { redirect_to mlp_queries_url } # rake routes indicates mlp_queries => mlp_queries#index
       format.json { head :no_content }
     end
+  end
+  def request_table
+    @mlp_query = MlpQuery.find(params[:id])
+    @email = @mlp_query[:mlp_login_email]
+  end
+  def display_table
+    @mlp_query = MlpQuery.find(params[:id])
+    @password = params[:pswd]
+    @results = @mlp_query.results(@password)
+    if (@results == 'login failed - please confirm MLP login email and password') ||
+       (@results == 'no mte matches - please confirm semester, section, and session')
+#      redirect_to edit_mlp_query(@mlp_query), notice: @results
+      render action: "edit", notice: @results
+    end
+    # default view generated
   end
 end

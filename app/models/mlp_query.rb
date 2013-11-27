@@ -29,6 +29,7 @@ class MlpQuery < ActiveRecord::Base
     wait.until { driver.find_element(:css,the_link_css) }
     lnk = driver.find_element(:css,the_link_css)
     lnk.click
+    wait.until {driver.find_elements(:tag_name, "frame")}
     select = driver.find_elements(:tag_name, "frame")
     select[0][:name]
     driver.switch_to.frame select[0] #  => ""
@@ -139,7 +140,7 @@ class MlpQuery < ActiveRecord::Base
       :fraction => last_assignment_fraction_completed,
       :status => status
     }
-#    binding.pry
+    binding.pry
     driver.quit
     myheadless.destroy
     results_hash

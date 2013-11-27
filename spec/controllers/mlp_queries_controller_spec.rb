@@ -23,7 +23,19 @@ describe MlpQueriesController do
   # This should return the minimal set of attributes required to create a valid
   # MlpQuery. As you add validations to MlpQuery, be sure to
   # adjust the attributes here as well.
-  let(:valid_attributes) { { "session" => "MyString" } }
+  let(:valid_attributes) { { mlp_login_email: 'bhf2689@email.vccs.edu',
+      section: 72,
+      semester: 'FA13',
+      class_stop:  Time.new(2013,12,17, 11,30,0),
+      class_start: Time.new(2013,11,14,9,30,0),
+      session: 'D' } }
+
+  let(:invalid_attributes) { { mlp_login_email: 'bhf2689@email.vccs.edu',
+      section: 72,
+      semester: 'FA13',
+      class_stop:  Time.new(2013,12,17, 11,30,0),
+      class_start: Time.new(2013,11,14,9,30,0),
+      session: nil } }
 
   # This should return the minimal set of values that should be in the session
   # in order to pass any filters (e.g. authentication) defined in
@@ -33,8 +45,9 @@ describe MlpQueriesController do
   describe "GET index" do
     it "assigns all mlp_queries as @mlp_queries" do
       mlp_query = MlpQuery.create! valid_attributes
+      mlp_query2 = MlpQuery.create! valid_attributes
       get :index, {}, valid_session
-      assigns(:mlp_queries).should eq([mlp_query])
+      assigns(:mlp_queries).should eq([mlp_query, mlp_query2])
     end
   end
 
@@ -43,6 +56,20 @@ describe MlpQueriesController do
       mlp_query = MlpQuery.create! valid_attributes
       get :show, {:id => mlp_query.to_param}, valid_session
       assigns(:mlp_query).should eq(mlp_query)
+    end
+  end
+
+  describe "GET show using expect" do
+    it "assigns the requested mlp_query as @mlp_query" do
+      mlp_query = MlpQuery.create! valid_attributes
+      get :show, {:id => mlp_query.to_param}, valid_session
+      expect(assigns(:mlp_query)).to eq mlp_query
+    end
+
+    it "renders the :show template" do
+      mlp_query = MlpQuery.create! valid_attributes
+      get :show, {:id => mlp_query.to_param}, valid_session
+      expect(response).to render_template :show
     end
   end
 
@@ -116,10 +143,10 @@ describe MlpQueriesController do
         assigns(:mlp_query).should eq(mlp_query)
       end
 
-      it "redirects to the mlp_query" do
+      it "redirects to the mlp_query with explicit :action" do
         mlp_query = MlpQuery.create! valid_attributes
         put :update, {:id => mlp_query.to_param, :mlp_query => valid_attributes}, valid_session
-        response.should redirect_to(mlp_query)
+        response.should redirect_to action: :show, id: assigns(:mlp_query).id
       end
     end
 
@@ -154,6 +181,46 @@ describe MlpQueriesController do
       mlp_query = MlpQuery.create! valid_attributes
       delete :destroy, {:id => mlp_query.to_param}, valid_session
       response.should redirect_to(mlp_queries_url)
+    end
+  end
+
+  # non HTTP routes
+  describe "#request_table" do
+    it "renders the the :request_table template" do
+      mlp_query = MlpQuery.create! valid_attributes
+      get :request_table, {:id => mlp_query.to_param}, valid_session
+      expect(response).to render_template :request_table
+    end
+    it "assigns the requested mlp_query as @mlp_query" do
+      mlp_query = MlpQuery.create! valid_attributes
+      mlp_query2 = MlpQuery.create! valid_attributes
+      get :request_table, {:id => mlp_query2.to_param}, valid_session
+      assigns(:mlp_query).should eq(mlp_query2)
+      expect(assigns(:email)).to eq(mlp_query2[:mlp_login_email])
+    end
+  end
+
+  describe "#display_table" do
+    it "sends :results to @mlp_query" do
+      pending "have not gotten the syntax right yet!"
+      mlp_query = MlpQuery.create! valid_attributes
+      get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
+      expect(:mlp_query).to receive(:results).once
+    end
+   it "renders the :display_table template" do
+      mlp_query = MlpQuery.create! valid_attributes
+      MlpQuery.any_instance.stub(:results).and_return('Login did not fail and results_hash was returned!')
+      get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
+      expect(response).to render_template :display_table
+    end
+    it "redirects to :edit if login fails" do
+      mlp_query = MlpQuery.create! valid_attributes
+      # Trigger the behavior that occurs when invalid params are submitted
+      MlpQuery.any_instance.stub(:results).and_return('login failed - please confirm MLP login email and password')
+      get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
+      expect(response).to render_template :edit
+    end
+    it "redirects to :edit if no mte courses match the query parameters" do
     end
   end
 
