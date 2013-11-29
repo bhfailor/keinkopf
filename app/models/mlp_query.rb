@@ -140,7 +140,7 @@ class MlpQuery < ActiveRecord::Base
       :fraction => last_assignment_fraction_completed,
       :status => status
     }
-    binding.pry
+    #binding.pry
     driver.quit
     myheadless.destroy
     results_hash
