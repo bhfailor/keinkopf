@@ -1,0 +1,12 @@
+26,27c26,45
+<   # The lines that follow are taken from everydayrailsrspec.pdf, 102/151
+<   # also discussed at http://stackoverflow.com/questions/19209865/rspec-leaving-record-in-test-database
+---
+>   # Include Factory Girl syntax to simplify calls to factories
+>   config.include FactoryGirl::Syntax::Methods
+> 
+>   # Use custom login macros in specs
+>   config.include LoginMacros
+> 
+
+

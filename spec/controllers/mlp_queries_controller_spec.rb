@@ -42,6 +42,25 @@ describe MlpQueriesController do
   # MlpQueriesController. Be sure to keep this updated too.
   let(:valid_session) { {} }
 
+  describe "GET cold_start (which grabs the last MlpQuery to start from)", focus: true do
+    it "assigns last MlpQuery as @mlp_query" do
+      mlp_query = MlpQuery.create! valid_attributes
+      mlp_query2 = MlpQuery.create! valid_attributes
+      get :cold_start, {}, valid_session
+      assigns(:mlp_query).should eq(mlp_query2)
+    end
+    it "assigns a default MlpQuery to @mlp_queries if none exist"  do
+      # nothing created so MlpQuery.last = nil
+      get :cold_start, {}, valid_session
+      my_mq = MlpQuery.new valid_attributes ; my_mq.id = 1 # need to set the id as well to satisfy eql
+      expect(assigns(:mlp_query)).to eql(my_mq)
+    end
+    it "renders the :edit view" do
+      get :cold_start, {}, valid_session
+      expect(response).to render_template :edit
+    end
+  end
+
   describe "GET index" do
     it "assigns all mlp_queries as @mlp_queries" do
       mlp_query = MlpQuery.create! valid_attributes

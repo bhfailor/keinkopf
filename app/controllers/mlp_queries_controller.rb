@@ -1,4 +1,15 @@
 class MlpQueriesController < ApplicationController
+  def cold_start
+    MlpQuery.create!({ mlp_login_email: 'bhf2689@email.vccs.edu',
+      section: 72,
+      semester: 'FA13',
+      class_stop:  Time.new(2013,12,17, 11,30,0),
+      class_start: Time.new(2013,11,14,9,30,0),
+      session: 'D' }) if MlpQuery.last == nil
+    @mlp_query = MlpQuery.last
+    render action: "edit"
+  end
+
   # GET /mlp_queries
   # GET /mlp_queries.json
   def index

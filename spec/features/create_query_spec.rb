@@ -1,8 +1,11 @@
 require 'spec_helper'
+require 'pry'
 
-feature "Queries" do
-  context "as a user" do
-    scenario "add a query"
-#      visit root_path # this failed miserably - will go back to model spec
+feature "Query Management" do
+  scenario "edits and updates a query" do
+    binding.pry
+    visit root_path
+  end
+  scenario "submits a query to obtain a table" do
   end
 end

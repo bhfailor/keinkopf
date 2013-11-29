@@ -1,6 +1,7 @@
 KeinKopf::Application.routes.draw do
   resources :mlp_queries
 
+  match 'mlp_queries/cold_start' => 'mlp_queries#cold_start'
   match 'mlp_queries/:id/:pswd/display_table' => 'mlp_queries#display_table'
   match 'mlp_queries/:id/request_table' => 'mlp_queries#request_table'
   get "conspectus/summarize"
