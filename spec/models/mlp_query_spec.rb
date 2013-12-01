@@ -31,7 +31,7 @@ describe MlpQuery do
     expect(MlpQuery.new(session: nil)).to have(1).errors_on(:session)
   end
   describe "#results" do
-    context "with valid query parameters", focus: true do
+    context "with valid query parameters" do
       before(:all) do
         an_mlp_query = MlpQuery.create(
           mlp_login_email: 'bhf2689@email.vccs.edu',
@@ -96,7 +96,7 @@ describe MlpQuery do
         expect(an_mlp_query.results("073156")).to eq 'no mte matches - please confirm semester, section, and session'
       end
     end
-    context "with a password of :example" do
+    context "with a password of :example", focus: true do
       before(:each) do
         @the_parameters = {
           mlp_login_email: 'bhf2689@email.vccs.edu',
@@ -116,14 +116,18 @@ describe MlpQuery do
         @table_example[:title].should include("#{@the_parameters[:semester]}-#{@the_parameters[:section]}#{@the_parameters[:session]}")
       end
       it "returns a valid :email" do
-        expect(@table_example[:email]  =~ /^[a-z]{3}\d{2,4}$/).to_not be nil
+        @table_example[:email].each do |an_email|
+          expect(an_email  =~ /^[a-z]{3}\d{2,4}$/).to_not be nil
+        end
       end
       it "returns a valid :mte (number)" do
         expect(@table_example[:mte]  =~ /^[1-9]{1}$/).to_not be nil
       end
       it "returns a valid (customer) :name" do
-        p @table_example[:name]
-        expect(@table_example[:name]  =~ /^[A-Z]{1}[a-z]+ [A-Z]{1}['A-Za-z]+$/).to_not be nil
+        @table_example[:name].each do |a_name|
+          p a_name
+          expect(a_name  =~ /^[A-Z]{1}[a-z]+ [A-Z]{1}['A-Za-z]+$/).to_not be nil
+        end
       end
       it "returns a valid :assignment (description)" do
         #p @table_example[:assignment]

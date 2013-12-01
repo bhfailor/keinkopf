@@ -11,9 +11,10 @@ class MlpQuery < ActiveRecord::Base
     require 'headless'
 
     if password == 'example' # TODO add more detail or variety using Faker output
-      new_title = "Gradebook - #{fake_name_and_email_prefix[:name]}"+' - '+Time.now.to_s+' (YYYY-MM-DD HH:MM:SS +/-UTC)'
+      new_title = "Gradebook - #{fake_name_and_email_prefix(1)[:name][0]}"+' - '+Time.now.to_s+' (YYYY-MM-DD HH:MM:SS +/-UTC)'
       new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
-      credentials = fake_name_and_email_prefix
+      quantity = rand(12..22)
+      credentials = fake_name_and_email_prefix(quantity)
       mlp_results = fake_mlp_results
       return {:title => new_title,
         :email => credentials[:email],
@@ -270,13 +271,16 @@ class MlpQuery < ActiveRecord::Base
         percent: hw_completed_percent, status: status, logoff: dttm, hours_to_go: hours_to_go }
   end
 
-  def fake_name_and_email_prefix
+  def fake_name_and_email_prefix(quantity)
     require 'faker'
-    first_name = Faker::Name.first_name
-    last_name = Faker::Name.last_name
-    middle_initial = Faker::Name.first_name[0]
-    email_prefix= (first_name[0]+middle_initial+last_name[0]).downcase+(rand(10..9999).to_s)
-    name = first_name+' '+last_name
+    name, email_prefix = [], []
+    (0...quantity).each do |index|
+      first_name = Faker::Name.first_name
+      last_name = Faker::Name.last_name
+      middle_initial = Faker::Name.first_name[0]
+      email_prefix << (first_name[0]+middle_initial+last_name[0]).downcase+(rand(10..9999).to_s)
+      name << first_name+' '+last_name
+    end
     {name: name, email: email_prefix}
   end
   def calculated_status(homework_completed_percentage, percent_elapsed_time)
