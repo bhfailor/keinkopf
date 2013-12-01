@@ -31,7 +31,7 @@ describe MlpQuery do
     expect(MlpQuery.new(session: nil)).to have(1).errors_on(:session)
   end
   describe "#results" do
-    context "with valid query parameters" do
+    context "with valid query parameters", focus: true do
       before(:all) do
         an_mlp_query = MlpQuery.create(
           mlp_login_email: 'bhf2689@email.vccs.edu',
@@ -65,7 +65,7 @@ describe MlpQuery do
         expect(@some_results[:logoff][0]).to include("m" && ":")
       end
       it "calculates the estimated hours needed for completion" do
-        expect(@some_results[:estimate][0]).to be_within(30.0).of(30.0)
+        expect(@some_results[:hours_to_go][0]).to be_within(30.0).of(30.0)
       end
       it "calculates the status of an individual" do
         expect(@some_results[:status].join(" ")).to include("safe")
@@ -96,7 +96,7 @@ describe MlpQuery do
         expect(an_mlp_query.results("073156")).to eq 'no mte matches - please confirm semester, section, and session'
       end
     end
-    context "with a password of :example", focus: true do
+    context "with a password of :example" do
       before(:each) do
         @the_parameters = {
           mlp_login_email: 'bhf2689@email.vccs.edu',
