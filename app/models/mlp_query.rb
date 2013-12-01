@@ -9,6 +9,25 @@ class MlpQuery < ActiveRecord::Base
     require 'pry'
     require 'selenium-webdriver'
     require 'headless'
+
+    if password == 'example' # TODO add more detail or variety using Faker output
+      new_title = "Gradebook - #{fake_name_and_email_prefix[:name]}"+' - '+Time.now.to_s+' (YYYY-MM-DD HH:MM:SS +/-UTC)'
+      new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
+      credentials = fake_name_and_email_prefix
+      mlp_results = fake_mlp_results
+      return {:title => new_title,
+        :email => credentials[:email],
+        :percent => mlp_results[:percent],
+        :hours_to_go => mlp_results[:hours_to_go],
+        :mte => mlp_results[:mte],
+        :name => credentials[:name],
+        :logoff => mlp_results[:logoff],
+        :assignment => mlp_results[:assignment] ,
+        :fraction => mlp_results[:fraction],
+        :status => mlp_results[:status],
+        :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
+    end
+
     myheadless = Headless.new
     myheadless.start
     driver = Selenium::WebDriver.for :firefox
@@ -122,7 +141,7 @@ class MlpQuery < ActiveRecord::Base
         driver.find_element(:css,'#Math_NativeCancel_Normal').click # cancel email message - should close window as well
         driver.switch_to.window driver.window_handles.last
         #binding.pry # confirm can see the following link before clicking on it:
-        status << if homework_completed_percentage.last == 100 then "complete" else (if  homework_completed_percentage.last >= percent_elapsed_time then "safe" else (if  homework_completed_percentage.last+13 >= percent_elapsed_time then "caution" else "danger" end) end) end
+        status << calculated_status(homework_completed_percentage.last, percent_elapsed_time)
         driver.find_element(:css,'#ctl00_LnkBackGradebook').click
       end
     end
@@ -132,17 +151,137 @@ class MlpQuery < ActiveRecord::Base
     results_hash = {:title => new_title,
       :email => email_prefix,
       :percent => homework_completed_percentage,
-      :estimate => estimated_hours_to_complete,
+      :hours_to_go => estimated_hours_to_complete,
       :mte => mte_number,
       :name => name,
       :logoff => last_logoff_datetime,
       :assignment => last_assignment_worked_on,
       :fraction => last_assignment_fraction_completed,
-      :status => status
+      :status => status,
+      :elapsed_time_percent => percent_elapsed_time
     }
     #binding.pry
     driver.quit
     myheadless.destroy
     results_hash
+  end
+  def fake_mlp_results
+    assignment_name = [
+                  "SECTION 1.1 MEDIA ASSIGNMENT",
+                  "SECTION 1.1 HOMEWORK",
+                  "SECTION 1.2 MEDIA ASSIGNMENT",
+                  "SECTION 1.2 HOMEWORK",
+                  "SECTION 1.3 MEDIA ASSIGNMENT",
+                  "SECTION 1.3 HOMEWORK",
+                  "CHAPTER 1 MID CHAPTER QUIZ REVIEW",
+                  "CHAPTER 1 MID CHAPTER QUIZ",
+                  "SECTION 1.4 MEDIA ASSIGNMENT",
+                  "SECTION 1.4 HOMEWORK",
+                  "SECTION 1.5 MEDIA ASSIGNMENT",
+                  "SECTION 1.5 HOMEWORK",
+                  "SECTION 2.1 MEDIA ASSIGNMENT",
+                  "SECTION 2.1 HOMEWORK",
+                  "SECTION 2.2 MEDIA ASSIGNMENT",
+                  "SECTION 2.2 HOMEWORK",
+                  "SECTION 2.3 MEDIA ASSIGNMENT",
+                  "SECTION 2.3 HOMEWORK",
+                  "CHAPTER 2 MID CHAPTER QUIZ REVIEW",
+                  "CHAPTER 2 MID CHAPTER QUIZ",
+                  "SECTION 2.4 MEDIA ASSIGNMENT",
+                  "SECTION 2.4 HOMEWORK",
+                  "SECTION 2.5 MEDIA ASSIGNMENT",
+                  "SECTION 2.5 HOMEWORK",
+                  "SECTION 2.6 MEDIA ASSIGNMENT",
+                  "SECTION 2.6 HOMEWORK",
+                  "UNIT 1 EXAM REVIEW",
+                  "UNIT 1 Exam Attempt #1",
+                  "UNIT 1 Exam Attempt #2"
+                 ]
+    running_hw_percent = [
+                        0,
+                        4,
+                        8,
+                        12,
+                        16,
+                        20,
+                        24,
+                        28,
+                        28,
+                        32,
+                        36,
+                        40,
+                        44,
+                        48,
+                        52,
+                        56,
+                        60,
+                        64,
+                        68,
+                        72,
+                        72,
+                        76,
+                        80,
+                        84,
+                        88,
+                        92,
+                        96,
+                        100,
+                        100
+                        ]
+    elapsed_time_percent = rand(25..75)
+    # What needs to be done?
+    # Generate a number of points in the assignment [14,32]
+    assignment_points = rand(14..32)
+    # Generate the number of points completed [0,number of points in the assignment]
+    completed_points = rand(0..assignment_points)
+    # Generate the fraction
+    fraction = "#{completed_points}/#{assignment_points}"
+    # Generate an MTE
+    mte = "123456789"[rand(0..8)]
+    # Select an assignment name which includes a running hw percent value
+    the_index = rand(0..28)
+    assignment = assignment_name[the_index]
+    hw_base_percent = running_hw_percent[the_index]
+    # Update the assignment name based on the MTE number
+    assignment =~ /^(S|C|U)\w{3,6} (\d+)\.?\d? [A-Z]/
+    if $1 == "U"
+      assignment[" 1"] = " #{mte}"
+    else
+      assignment[" "+$2] = " #{(mte.to_i-1)*2+($2.to_i)}"
+    end
+
+    # If the assignment name include? "SECTION" or update the hw percent complete value based on fraction of the assignment completed
+    #  each assignment is about 4% of the total homework in this approximation
+    #binding.pry
+    hw_completed_percent = hw_base_percent
+    hw_completed_percent = hw_completed_percent + \
+      (4.0*completed_points.to_f/assignment_points.to_f).round(0) if (assignment.include? "REVIEW") || (assignment.include? "SECTION")
+
+    # Generate hours to complete based on 30 hours total and percent of hw completed
+    hours_to_go = 30.0*(100.0-hw_completed_percent)/100.0
+    # Generate logoff scaled from now to class start based on elapsed_time_percent (about 2.6 million seconds in a session)
+    dttm = Time.now() - elapsed_time_percent.to_f*2600000.0/100.0*rand #
+
+    # Generate status relative to the time elapsed.
+    status = calculated_status(hw_completed_percent, elapsed_time_percent)
+    # Return a hash that includes mte, assignment_name, assignment_completed_fraction, hw_completed_percent, elapsed_time_percent,
+    #  status, logoff, and hours_to_go
+    {mte: mte, elapsed_time_percent: elapsed_time_percent, fraction: fraction, assignment: assignment,
+        percent: hw_completed_percent, status: status, logoff: dttm, hours_to_go: hours_to_go }
+  end
+
+  def fake_name_and_email_prefix
+    require 'faker'
+    first_name = Faker::Name.first_name
+    last_name = Faker::Name.last_name
+    middle_initial = Faker::Name.first_name[0]
+    email_prefix= (first_name[0]+middle_initial+last_name[0]).downcase+(rand(10..9999).to_s)
+    name = first_name+' '+last_name
+    {name: name, email: email_prefix}
+  end
+  def calculated_status(homework_completed_percentage, percent_elapsed_time)
+    if homework_completed_percentage == 100 then "complete" else
+      (if  homework_completed_percentage >= percent_elapsed_time then "safe" else
+         (if  homework_completed_percentage+13 >= percent_elapsed_time then "caution" else "danger" end) end) end
   end
 end
