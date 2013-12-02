@@ -121,7 +121,9 @@ describe MlpQuery do
         end
       end
       it "returns a valid :mte (number)" do
-        expect(@table_example[:mte]  =~ /^[1-9]{1}$/).to_not be nil
+        @table_example[:mte].each do |an_mte|
+          expect(an_mte =~ /^[1-9]{1}$/).to_not be nil
+        end
       end
       it "returns a valid (customer) :name" do
         @table_example[:name].each do |a_name|
@@ -130,17 +132,21 @@ describe MlpQuery do
         end
       end
       it "returns a valid :assignment (description)" do
-        #p @table_example[:assignment]
-        expect(@table_example[:assignment] =~ /^[S|C|U]\w{3,6} \d+\.?\d? [A-Z]/).to_not be nil
+        the_quantity = @table_example[:assignment].count
+        (0...the_quantity).each do |i|
+          expect(@table_example[:assignment][i] =~ /^[S|C|U]\w{3,6} \d+\.?\d? [A-Z]/).to_not be nil
+        end
       end
       it "returns an :assignment (description) consistent with the mte" do
-        #p @table_example[:assignment]
-        expect(@table_example[:assignment] =~ /^(S|C|U)\w{3,6} (\d+)\.?\d? [A-Z]/).to_not be nil
-        if $1 == "U"
-          expect($2).to eq(@table_example[:mte])
-        else
-          expect(($2.to_i ==  2*(@table_example[:mte].to_i))   ||
-                 ($2.to_i == (2*(@table_example[:mte].to_i)-1))).to be_true
+        the_quantity = @table_example[:assignment].count
+        (0...the_quantity).each do |i|
+          expect(@table_example[:assignment][i] =~ /^(S|C|U)\w{3,6} (\d+)\.?\d? [A-Z]/).to_not be nil
+          if $1 == "U"
+            expect($2).to eq(@table_example[:mte][i])
+          else
+            expect(($2.to_i ==  2*(@table_example[:mte][i].to_i))   ||
+                   ($2.to_i == (2*(@table_example[:mte][i].to_i)-1))).to be_true
+          end
         end
       end
       it "returns a valid :fraction (of assignment completed string)" do

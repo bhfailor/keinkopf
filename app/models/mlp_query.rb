@@ -15,7 +15,7 @@ class MlpQuery < ActiveRecord::Base
       new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
       quantity = rand(12..22)
       credentials = fake_name_and_email_prefix(quantity)
-      mlp_results = fake_mlp_results
+      mlp_results = fake_mlp_results(quantity)
       return {:title => new_title,
         :email => credentials[:email],
         :percent => mlp_results[:percent],
@@ -166,7 +166,7 @@ class MlpQuery < ActiveRecord::Base
     myheadless.destroy
     results_hash
   end
-  def fake_mlp_results
+  def fake_mlp_results(quantity)
     assignment_name = [
                   "SECTION 1.1 MEDIA ASSIGNMENT",
                   "SECTION 1.1 HOMEWORK",
@@ -265,6 +265,25 @@ class MlpQuery < ActiveRecord::Base
 
     # Generate status relative to the time elapsed.
     status = calculated_status(hw_completed_percent, elapsed_time_percent)
+
+    # Switch over to returning an array rather than a single value for each hash value
+    mte, assignment = [], []
+    (0...quantity).each do |index|
+      mte << "123456789"[rand(0..8)]
+      # Select an assignment name which includes a running hw percent value
+      the_index = rand(0..28)
+      an_assignment = assignment_name[the_index]
+      hw_base_percent = running_hw_percent[the_index] # TODO does this need to be modified for the array case?
+      # Update the assignment name based on the MTE number
+      an_assignment =~ /^(S|C|U)\w{3,6} (\d+)\.?\d? [A-Z]/
+      if $1 == "U"
+        an_assignment = an_assignment.sub(/ 1/," #{mte.last}")
+      else
+        an_assignment = an_assignment.sub(/ #{$2}/," #{(mte.last.to_i-1)*2+($2.to_i)}")
+      end
+      assignment << an_assignment
+
+    end
     # Return a hash that includes mte, assignment_name, assignment_completed_fraction, hw_completed_percent, elapsed_time_percent,
     #  status, logoff, and hours_to_go
     {mte: mte, elapsed_time_percent: elapsed_time_percent, fraction: fraction, assignment: assignment,
