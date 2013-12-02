@@ -106,9 +106,11 @@ class MlpQuery < ActiveRecord::Base
         last_assignment_worked_on << driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text
         last_assignment_fraction_completed << driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(6)').text
         the_last_logoff_datetime = driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(9)').text
-        the_last_logoff_datetime = "\n" if the_last_logoff_datetime == "" # edge case of no work done on mte so no logoff time
+        #the_last_logoff_datetime = "\n" if the_last_logoff_datetime == "" # edge case of no work done on mte so no logoff time
         #binding.pry
-        last_logoff_datetime << (the_last_logoff_datetime["\n"] = " "; the_last_logoff_datetime) # replace new line with space
+        #last_logoff_datetime << (the_last_logoff_datetime["\n"] = " "; the_last_logoff_datetime) # replace new line with space
+        # return a Time object
+        last_logoff_datetime <<  if the_last_logoff_datetime == "" then "" else mlp_time_to_Time_class(the_last_logoff_datetime) end
         name << driver.find_element(:css,'#PagerContainer > div:nth-child(3) > strong:nth-child(1)').text
         mte_number << mte_numbers[course_index]
         # go into details
@@ -230,45 +232,17 @@ class MlpQuery < ActiveRecord::Base
                         100
                         ]
     elapsed_time_percent = rand(25..75)
-    # What needs to be done?
-    # Generate a number of points in the assignment [14,32]
-    assignment_points = rand(14..32)
-    # Generate the number of points completed [0,number of points in the assignment]
-    completed_points = rand(0..assignment_points)
-    # Generate the fraction
-    fraction = "#{completed_points}/#{assignment_points}"
-    # Generate an MTE
-    mte = "123456789"[rand(0..8)]
-    # Select an assignment name which includes a running hw percent value
-    the_index = rand(0..28)
-    assignment = assignment_name[the_index]
-    hw_base_percent = running_hw_percent[the_index]
-    # Update the assignment name based on the MTE number
-    assignment =~ /^(S|C|U)\w{3,6} (\d+)\.?\d? [A-Z]/
-    if $1 == "U"
-      assignment[" 1"] = " #{mte}"
-    else
-      assignment[" "+$2] = " #{(mte.to_i-1)*2+($2.to_i)}"
-    end
-
-    # If the assignment name include? "SECTION" or update the hw percent complete value based on fraction of the assignment completed
-    #  each assignment is about 4% of the total homework in this approximation
-    #binding.pry
-    hw_completed_percent = hw_base_percent
-    hw_completed_percent = hw_completed_percent + \
-      (4.0*completed_points.to_f/assignment_points.to_f).round(0) if (assignment.include? "REVIEW") || (assignment.include? "SECTION")
-
-    # Generate hours to complete based on 30 hours total and percent of hw completed
-    hours_to_go = 30.0*(100.0-hw_completed_percent)/100.0
-    # Generate logoff scaled from now to class start based on elapsed_time_percent (about 2.6 million seconds in a session)
-    dttm = Time.now() - elapsed_time_percent.to_f*2600000.0/100.0*rand #
-
-    # Generate status relative to the time elapsed.
-    status = calculated_status(hw_completed_percent, elapsed_time_percent)
 
     # Switch over to returning an array rather than a single value for each hash value
-    mte, assignment = [], []
+    fraction, status, mte, assignment, dttm, hours_to_go, percent = [], [], [], [], [], [], []
     (0...quantity).each do |index|
+      # Generate a number of points in the assignment [14,32]
+      assignment_points = rand(14..32)
+      # Generate the number of points completed [0,number of points in the assignment]
+      completed_points = rand(0..assignment_points)
+      # Generate the fraction
+      fraction << "#{completed_points}/#{assignment_points}"
+
       mte << "123456789"[rand(0..8)]
       # Select an assignment name which includes a running hw percent value
       the_index = rand(0..28)
@@ -282,12 +256,27 @@ class MlpQuery < ActiveRecord::Base
         an_assignment = an_assignment.sub(/ #{$2}/," #{(mte.last.to_i-1)*2+($2.to_i)}")
       end
       assignment << an_assignment
+      # If the assignment name include? "SECTION" or update the hw percent complete value based on fraction of the assignment completed
+      #  each assignment is about 4% of the total homework in this approximation
+      #binding.pry
+      hw_completed_percent = hw_base_percent
+      hw_completed_percent = hw_completed_percent + \
+       (4.0*completed_points.to_f/assignment_points.to_f).round(0) if (an_assignment.include? "REVIEW") || (an_assignment.include? "SECTION")
+      percent << hw_completed_percent
+      # Generate hours to complete based on 30 hours total and percent of hw completed
+      hours_to_go << 30.0*(100.0-hw_completed_percent)/100.0
+      # Generate status relative to the time elapsed.
+      status << calculated_status(hw_completed_percent, elapsed_time_percent)
+
+      # Generate logoff scaled from now to class start based on elapsed_time_percent (about 2.6 million seconds in a session)
+      dttm << Time.now() - elapsed_time_percent.to_f*2600000.0/100.0*rand #
 
     end
     # Return a hash that includes mte, assignment_name, assignment_completed_fraction, hw_completed_percent, elapsed_time_percent,
     #  status, logoff, and hours_to_go
+    # p mte, assignment
     {mte: mte, elapsed_time_percent: elapsed_time_percent, fraction: fraction, assignment: assignment,
-        percent: hw_completed_percent, status: status, logoff: dttm, hours_to_go: hours_to_go }
+        percent: percent, status: status, logoff: dttm, hours_to_go: hours_to_go }
   end
 
   def fake_name_and_email_prefix(quantity)
@@ -306,5 +295,11 @@ class MlpQuery < ActiveRecord::Base
     if homework_completed_percentage == 100 then "complete" else
       (if  homework_completed_percentage >= percent_elapsed_time then "safe" else
          (if  homework_completed_percentage+13 >= percent_elapsed_time then "caution" else "danger" end) end) end
+  end
+  def mlp_time_to_Time_class(mlp_time)
+    mlp_time =~ /^(\d+)\/(\d+)\/(\d+)\W(\d+):(\d+)(a|p)m$/
+    hour = $4.to_i + if $6 == "a" then 0 else 12 end # assume "p" if not "a"
+    hour = hour - 12 if hour % 12 == 0 # edge cases of noon and midnight
+    Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00")
   end
 end
