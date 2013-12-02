@@ -300,6 +300,7 @@ class MlpQuery < ActiveRecord::Base
     mlp_time =~ /^(\d+)\/(\d+)\/(\d+)\W(\d+):(\d+)(a|p)m$/
     hour = $4.to_i + if $6 == "a" then 0 else 12 end # assume "p" if not "a"
     hour = hour - 12 if hour % 12 == 0 # edge cases of noon and midnight
-    Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00")
+    Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00") # use "-05:00" for EST but actually want Eastern Time adjusted for DST so:
+    #Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0).in_time_zone("Eastern Time (US & Canada)")
   end
 end
