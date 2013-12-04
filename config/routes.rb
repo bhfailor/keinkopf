@@ -1,9 +1,9 @@
 KeinKopf::Application.routes.draw do
   resources :mlp_queries
 
-  match 'mlp_queries/cold_start' => 'mlp_queries#cold_start'
-  match 'mlp_queries/:id/:pswd/display_table' => 'mlp_queries#display_table'
-  match 'mlp_queries/:id/request_table' => 'mlp_queries#request_table'
+  get 'mlp_queries/cold_start' => 'mlp_queries#cold_start'
+  post 'mlp_queries/display_table/:id' => 'mlp_queries#display_table'
+  get 'mlp_queries/request_table/:id' => 'mlp_queries#request_table'
   get "conspectus/summarize"
 
   # The priority is based upon order of creation:
@@ -55,7 +55,7 @@ KeinKopf::Application.routes.draw do
 
   # You can have the root of your site routed with "root"
   # just remember to delete public/index.html.
-  # root :to => 'welcome#index'
+  root :to => 'mlp_queries#cold_start'
 
   # See how all your routes lay out with "rake routes"
 

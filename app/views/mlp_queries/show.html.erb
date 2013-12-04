@@ -30,5 +30,5 @@
   <%= @mlp_query.mlp_login_email %>
 </p>
 
-<%= link_to 'Edit', edit_mlp_query_path(@mlp_query) %> |
-<%= link_to 'Back', mlp_queries_path %>
+<%= link_to 'edit this query', edit_mlp_query_path(@mlp_query) %> |
+<%= link_to 'submit this query', controller: "mlp_queries", action: "request_table", id: @mlp_query %>

@@ -71,7 +71,7 @@ class MlpQueriesController < ApplicationController
 
     respond_to do |format|
       if @mlp_query.update_attributes(params[:mlp_query])
-        format.html { redirect_to @mlp_query, notice: 'Mlp query was successfully updated.' }
+        format.html { redirect_to @mlp_query, notice: 'MLP query was successfully updated.' }
         format.json { head :no_content }
       else
         format.html { render action: "edit" }
@@ -99,10 +99,11 @@ class MlpQueriesController < ApplicationController
     @mlp_query = MlpQuery.find(params[:id])
     @password = params[:pswd]
     @results = @mlp_query.results(@password)
+    binding.pry
     if (@results == 'login failed - please confirm MLP login email and password') ||
        (@results == 'no mte matches - please confirm semester, section, and session')
 #      redirect_to edit_mlp_query(@mlp_query), notice: @results
-      render action: "edit", notice: @results
+      render action: "edit"
     end
     # default view generated
   end

@@ -1,0 +1,21 @@
+<h1>Summary Table</h1>
+<h2><%= @results[:title] %></h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>hw%</th>
+      <th>name</th>
+    </tr>
+  </thead>
+  <tbody>
+    <%(0...@results[:name].count).each do |i| %>
+    <tr>
+      <td><%=@results[:percent][i] %></td>
+      <td><%=@results[:name][i] %></td>
+    </tr>
+    <% end %>
+  </tbody>
+</table>
+
+<%= link_to 'start over', '/' %>
