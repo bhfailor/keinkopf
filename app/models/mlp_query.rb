@@ -157,6 +157,8 @@ class MlpQuery < ActiveRecord::Base
         driver.switch_to.window driver.window_handles.last
         #binding.pry # confirm can see the following link before clicking on it:
         status << calculated_status(homework_completed_percentage.last, percent_elapsed_time)
+        driver.switch_to.window(driver.window_handles[1]) # Ignore the "Flash Needed. . ." popup in case it appears
+        wait.until { driver.find_element(:css,'#ctl00_LnkBackGradebook') }
         driver.find_element(:css,'#ctl00_LnkBackGradebook').click
       end
     end
