@@ -104,13 +104,14 @@ class MlpQuery < ActiveRecord::Base
     last_assignment_worked_on, last_assignment_fraction_completed, last_logoff_datetime, email_prefix = [], [], [], []
     number_of_courses = indices.count
     (0...number_of_courses).each do |course_index|
-      wait.until { driver.find_elements(:css,'option') }
+      wait.until { driver.find_elements(:css,'option')[indices[course_index]] }
+      #binding.pry # this failed sporatically so added [indices[course_index]] to above line
       driver.find_elements(:css,'option')[indices[course_index]].click
       number_gradebook_entries_for_this_course = driver.find_elements(:css,'[id$="Member"]').count
       (0...number_gradebook_entries_for_this_course).each do |entry_index|
-        wait.until { driver.find_elements(:css,'[id$="Member"]') }
+        wait.until { driver.find_elements(:css,'[id$="Member"]')[entry_index] }
+        #binding.pry # this failed sporatically so added [entry_index] to the above line
         driver.find_elements(:css,'[id$="Member"]')[entry_index].click
-#        binding.pry
         wait.until { driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)') }
         last_assignment_worked_on << driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(2)').text
         last_assignment_fraction_completed << driver.find_element(:css,'.grid > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(6)').text
@@ -148,6 +149,8 @@ class MlpQuery < ActiveRecord::Base
         #binding.pry
         driver.find_element(:css,'#ctl00_MasterContent_StudentPager1_EmailStudentLink').click
         driver.switch_to.window driver.window_handles.last # switch to most recenty opened window
+        #binding.pry
+        wait.until { driver.find_element(:css,'#ctl00_MasterContent_TextBoxTo') }
         full_email_address = driver.find_element(:css,'#ctl00_MasterContent_TextBoxTo')[:value] # grab email address
         email_prefix <<  (full_email_address["@email.vccs.edu"] = ""; full_email_address) # remove domain information
         driver.find_element(:css,'#Math_NativeCancel_Normal').click # cancel email message - should close window as well
