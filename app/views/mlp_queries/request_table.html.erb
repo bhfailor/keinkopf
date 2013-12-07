@@ -1,6 +1,7 @@
 <h1>Enter Password for your  MLP Query</h1>
 
 <%= form_tag({controller:"mlp_queries", action: "display_table", id:@mlp_query[:id]}, {method: "post"}) do %>
+  Please be patient - it takes up to several minutes to generate a table from the MLP database!</br>
   Enter <strong>example</strong> to see a table with fake data</br>
   <%= label_tag(:pswd, "password:") %>
   <%= password_field_tag(:pswd) %>
