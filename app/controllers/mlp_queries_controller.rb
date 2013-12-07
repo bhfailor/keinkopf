@@ -7,6 +7,9 @@ class MlpQueriesController < ApplicationController
       class_start: Time.new(2013,11,14,9,30,0),
       session: 'D' }) if MlpQuery.last == nil
     @mlp_query = MlpQuery.last
+    @mlp_query.class_stop  = @mlp_query.class_stop.in_time_zone("Eastern Time (US & Canada)")
+    @mlp_query.class_start = @mlp_query.class_start.in_time_zone("Eastern Time (US & Canada)")
+    @results = 'Welcome - please change parameters as needed for your query!'
     render action: "edit"
   end
 
@@ -99,7 +102,6 @@ class MlpQueriesController < ApplicationController
     @mlp_query = MlpQuery.find(params[:id])
     @password = params[:pswd]
     @results = @mlp_query.results(@password)
-    binding.pry
     if (@results == 'login failed - please confirm MLP login email and password') ||
        (@results == 'no mte matches - please confirm semester, section, and session')
 #      redirect_to edit_mlp_query(@mlp_query), notice: @results

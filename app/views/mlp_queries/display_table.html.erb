@@ -1,18 +1,38 @@
-<h1>Summary Table</h1>
-<h2><%= @results[:title] %></h2>
+<style type="text/css">
+tr.dropped {text-decoration:line-through;}
+tr.danger  {color:#ff0000;}
+tr.caution {color:#bf9000;}
+tr.safe    {color:#6aa84f;}
+tr.complete{font-style:italic;}
+td, th {border:1px solid black;}
+</style>
+
+<h3>Summary Table - <%= @results[:title] %></h3>
 
 <table>
   <thead>
     <tr>
       <th>hw%</th>
       <th>name</th>
+      <th>mte</th>
+      <th>current assignment</th>
+      <th>correct</br>/total</th>
+      <th>days since</br>logoff</th>
+      <th>hours to go</br>(estimate)</th>
+      <th>email</th>
     </tr>
   </thead>
   <tbody>
-    <%(0...@results[:name].count).each do |i| %>
-    <tr>
-      <td><%=@results[:percent][i] %></td>
-      <td><%=@results[:name][i] %></td>
+    <% @results[:progress].keys.each do |key| %>
+    <tr class=<%=@results[:progress][key][:status]%>>
+      <td><%=@results[:progress][key][:percent] %></td>
+      <td><%=@results[:progress][key][:name] %></td>
+      <td><%=@results[:progress][key][:mte] %></td>
+      <td><%=@results[:progress][key][:assignment] %></td>
+      <td><%=@results[:progress][key][:fraction] %></td>
+      <td><%=((Time.now-@results[:progress][key][:logoff])/60.0/60.0/24.0).round(1) %></td> <%# days to tenths place since last logoff %>
+      <td><%=@results[:progress][key][:hours_to_go] %></td>
+      <td><%=@results[:progress][key][:email] %></td>
     </tr>
     <% end %>
   </tbody>

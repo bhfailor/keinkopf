@@ -11,12 +11,13 @@ class MlpQuery < ActiveRecord::Base
     require 'headless'
 
     if password == 'example' # TODO add more detail or variety using Faker output
-      new_title = "Gradebook - #{fake_name_and_email_prefix(1)[:name][0]}"+' - '+Time.now.to_s+' (YYYY-MM-DD HH:MM:SS +/-UTC)'
+      new_title = "Gradebook - #{fake_name_and_email_prefix(1)[:name][0]}"+' - '+Time.now.in_time_zone("Eastern Time (US & Canada)").to_s[0..15]
       new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
+
       quantity = rand(12..22)
       credentials = fake_name_and_email_prefix(quantity)
       mlp_results = fake_mlp_results(quantity)
-      return {:title => new_title,
+      progress = {
         :email => credentials[:email],
         :percent => mlp_results[:percent],
         :hours_to_go => mlp_results[:hours_to_go],
@@ -25,7 +26,15 @@ class MlpQuery < ActiveRecord::Base
         :logoff => mlp_results[:logoff],
         :assignment => mlp_results[:assignment] ,
         :fraction => mlp_results[:fraction],
-        :status => mlp_results[:status],
+        :status => mlp_results[:status]
+      }
+
+      temp = hash_columns_to_rows(progress)
+      progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
+
+      new_title = new_title+" - Elapsed time percent: #{mlp_results[:elapsed_time_percent]}"
+      return {:title => new_title,
+        :progress => progress,
         :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
     end
 
@@ -110,7 +119,7 @@ class MlpQuery < ActiveRecord::Base
         #binding.pry
         #last_logoff_datetime << (the_last_logoff_datetime["\n"] = " "; the_last_logoff_datetime) # replace new line with space
         # return a Time object
-        last_logoff_datetime <<  if the_last_logoff_datetime == "" then "" else mlp_time_to_Time_class(the_last_logoff_datetime) end
+        last_logoff_datetime <<  if the_last_logoff_datetime == "" then self.class_start else mlp_time_to_Time_class(the_last_logoff_datetime) end
         name << driver.find_element(:css,'#PagerContainer > div:nth-child(3) > strong:nth-child(1)').text
         mte_number << mte_numbers[course_index]
         # go into details
@@ -149,9 +158,9 @@ class MlpQuery < ActiveRecord::Base
       end
     end
     # UTC is Universal Time Coordinated, up to 1972 Greenwich Mean Time (GMT)
-    new_title = @title+' - '+Time.now.to_s+' (YYYY-MM-DD HH:MM:SS +/-UTC)'
+    new_title = @title+' - '+Time.now.in_time_zone("Eastern Time (US & Canada)").to_s[0..15]
     new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
-    results_hash = {:title => new_title,
+    progress = {
       :email => email_prefix,
       :percent => homework_completed_percentage,
       :hours_to_go => estimated_hours_to_complete,
@@ -161,6 +170,14 @@ class MlpQuery < ActiveRecord::Base
       :assignment => last_assignment_worked_on,
       :fraction => last_assignment_fraction_completed,
       :status => status,
+    }
+
+      temp = hash_columns_to_rows(progress)
+      progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
+
+    new_title = new_title+" - Elapsed time percent: #{percent_elapsed_time}"
+    results_hash = {:title => new_title,
+      :progress => progress,
       :elapsed_time_percent => percent_elapsed_time
     }
     #binding.pry
@@ -302,5 +319,21 @@ class MlpQuery < ActiveRecord::Base
     hour = hour - 12 if hour % 12 == 0 # edge cases of noon and midnight
     Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00") # use "-05:00" for EST but actually want Eastern Time adjusted for DST so:
     #Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0).in_time_zone("Eastern Time (US & Canada)")
+  end
+  def hash_columns_to_rows(a_hash)
+    the_keys = a_hash.keys
+    nels = a_hash[the_keys.first].count
+    the_keys.each do |a_key|
+      return "error:  value arrays are not all the same length!" unless nels == a_hash[a_key].count
+    end
+    x = {}
+    (0...nels).each do |i|
+      temp = {}
+      (0...the_keys.count).each do |j|
+        temp[the_keys[j]] = a_hash[the_keys[j]][i]
+      end
+      x[i] = temp
+    end
+    x
   end
 end
