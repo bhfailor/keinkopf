@@ -10,7 +10,7 @@ class MlpQuery < ActiveRecord::Base
     require 'selenium-webdriver'
     require 'headless'
 
-    if password == 'example' # TODO add more detail or variety using Faker output
+    if password == 'example'
       new_title = "Gradebook - #{fake_name_and_email_prefix(1)[:name][0]}"+' - '+Time.now.in_time_zone("Eastern Time (US & Canada)").to_s[0..15]
       new_title["Gradebook -"] = "#{semester}-#{section}#{session}"
 
@@ -38,8 +38,8 @@ class MlpQuery < ActiveRecord::Base
         :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
     end
 
-    myheadless = Headless.new
-    myheadless.start
+#    myheadless = Headless.new
+#    myheadless.start
     driver = Selenium::WebDriver.for :firefox
     wait = Selenium::WebDriver::Wait.new(:timeout => 30) # seconds
     # find the elapsed time percent
@@ -66,10 +66,10 @@ class MlpQuery < ActiveRecord::Base
     select2 = driver.find_elements(:tag_name, "frame")
     @tree = select2[1][:name] #  => "Tree"
     driver.switch_to.frame select2[1] #  => ""
-    wait.until { driver.find_element(:id,'contentitem|html|357783773').displayed? }
-    # binding.pry
-    btn = driver.find_element(:id,'contentitem|html|357783773') # works!
-    btn.click
+#    binding.pry
+    wait.until { driver.find_element(:link_text,'MML Instructor Tools*') }
+    driver.find_element(:link_text,'MML Instructor Tools*').click
+
     driver.title
     driver.switch_to.default_content
     select = driver.find_elements(:tag_name, "frame")
@@ -86,17 +86,28 @@ class MlpQuery < ActiveRecord::Base
 
     handles = driver.window_handles
     driver.switch_to.window handles[1]
-    wait.until { driver.find_element(:id,'ctl00_MasterContent_DataList1_ctl00_Member') }
+    #binding.pry
+    #wait.until { driver.find_element(:id,'ctl00_MasterContent_DataList1_ctl00_Member') }
+    wait.until { driver.find_element(:link_text,"All Assignments") }
+    wait.until { driver.title }
     @title = driver.title
     # collect the different courses in the gradebook listed as options of a select element
     options = driver.find_elements(:css,'option')
+    #binding.pry
     mte_numbers = [] ; indices = []
     (0...options.count).each do |index|
       if options[index][:text] =~ /^Member: #{semester}MTE(\d)#{session}-#{section}/
-        mte_numbers << $1
-        indices << index
+        an_mte_number = $1
+        if options[index][:text] =~ /^Member.+ \[(\d+)\] -.+$/
+          # binding.pry
+          if $1.to_i > 0 # must have at least one course member!
+            mte_numbers << an_mte_number
+            indices << index
+          end
+        end
       end
     end
+    # binding.pry
     return 'no mte matches - please confirm semester, section, and session' if indices.count == 0
 
     # traverse the mte courses that matched, creating the arrays to capture the info first
@@ -187,7 +198,7 @@ class MlpQuery < ActiveRecord::Base
     }
     #binding.pry
     driver.quit
-    myheadless.destroy
+#    myheadless.destroy
     results_hash
   end
   def fake_mlp_results(quantity)
