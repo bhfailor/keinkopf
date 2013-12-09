@@ -45,6 +45,7 @@ class MlpQuery < ActiveRecord::Base
     # find the elapsed time percent
     percent_elapsed_time = (100.0*(Time.now()-class_start)/(class_stop-class_start)).to_i
     driver.navigate.to 'http://wytheville.mylabsplus.com'
+    wait.until { driver.find_element :name => "Username" }
     el = driver.find_element :name => "Username"
     el.send_keys self.mlp_login_email
     el = driver.find_element :name => "Password"
