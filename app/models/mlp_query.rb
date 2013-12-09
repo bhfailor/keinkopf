@@ -38,8 +38,8 @@ class MlpQuery < ActiveRecord::Base
         :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
     end
 
-#    myheadless = Headless.new
-#    myheadless.start
+    myheadless = Headless.new
+    myheadless.start
     driver = Selenium::WebDriver.for :firefox
     wait = Selenium::WebDriver::Wait.new(:timeout => 30) # seconds
     # find the elapsed time percent
@@ -198,7 +198,7 @@ class MlpQuery < ActiveRecord::Base
     }
     #binding.pry
     driver.quit
-#    myheadless.destroy
+    myheadless.destroy
     results_hash
   end
   def fake_mlp_results(quantity)
