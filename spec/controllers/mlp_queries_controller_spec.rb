@@ -42,7 +42,7 @@ describe MlpQueriesController do
   # MlpQueriesController. Be sure to keep this updated too.
   let(:valid_session) { {} }
 
-  describe "GET cold_start (which grabs the last MlpQuery to start from)", focus: true do
+  describe "GET cold_start (which grabs the last MlpQuery to start from)", focus: false do
     it "assigns last MlpQuery as @mlp_query" do
       mlp_query = MlpQuery.create! valid_attributes
       mlp_query2 = MlpQuery.create! valid_attributes
@@ -220,11 +220,11 @@ describe MlpQueriesController do
   end
 
   describe "#display_table" do
-    it "sends :results to @mlp_query" do
-      pending "have not gotten the syntax right yet!"
+    it "sends :results to @mlp_query", focus: true do
       mlp_query = MlpQuery.create! valid_attributes
+      #expect(MlpQuery.any_instance).to receive(:results).once
+      MlpQuery.any_instance.should_receive(:results).once # Why does this line work and while the line above does not?
       get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
-      expect(:mlp_query).to receive(:results).once
     end
    it "renders the :display_table template" do
       mlp_query = MlpQuery.create! valid_attributes
@@ -239,7 +239,19 @@ describe MlpQueriesController do
       get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
       expect(response).to render_template :edit
     end
-    it "redirects to :edit if no mte courses match the query parameters" do
+    it "redirects to :edit if no mte courses match the query parameters", focus: false do
+      mlp_query = MlpQuery.create! valid_attributes
+      # Trigger the behavior that occurs when invalid params are submitted
+      MlpQuery.any_instance.stub(:results).and_return('no mte matches - please confirm semester, section, and session')
+      get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
+      expect(response).to render_template :edit
+    end
+    it "redirects to :edit if there is a timeout accessing MLP database", focus: false do
+      mlp_query = MlpQuery.create! valid_attributes
+      # Trigger the behavior that occurs when invalid params are submitted
+      MlpQuery.any_instance.stub(:results).and_return('the MLP database query timed out - you may succeed if you try again')
+      get :display_table, {:id => mlp_query.to_param, :pswd => "test"}, valid_session
+      expect(response).to render_template :edit
     end
   end
 

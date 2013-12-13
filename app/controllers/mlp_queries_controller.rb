@@ -103,8 +103,8 @@ class MlpQueriesController < ApplicationController
     @password = params[:pswd]
     @results = @mlp_query.results(@password)
     if (@results == 'login failed - please confirm MLP login email and password') ||
-       (@results == 'no mte matches - please confirm semester, section, and session')
-#      redirect_to edit_mlp_query(@mlp_query), notice: @results
+       (@results == 'no mte matches - please confirm semester, section, and session') ||
+       (@results == 'the MLP database query timed out - you may succeed if you try again')
       render action: "edit"
     end
     # default view generated

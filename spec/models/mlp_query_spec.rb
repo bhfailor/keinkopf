@@ -25,8 +25,8 @@ describe MlpQuery do
     end
   end
   describe "#mlp_time_to_Time_class", focus: false do
-    it "returns a Time class object when given a MLP date time string" do
-      expect(MlpQuery.new.mlp_time_to_Time_class("11/21/13\n10:17am").class).to eq(Time)
+    it "returns an appropriate date time object when given a MLP date time string" do
+      expect(MlpQuery.new.mlp_time_to_Time_class("11/21/13\n10:17am").class).to eq(ActiveSupport::TimeWithZone)
     end
     it "returns the correct Time class object for an 'am' MLP date time string" do
       expect(MlpQuery.new.mlp_time_to_Time_class("11/21/13\n10:17am")).to \
@@ -68,19 +68,34 @@ describe MlpQuery do
     expect(MlpQuery.new(session: nil)).to have(1).errors_on(:session)
   end
   describe "#results" do
-    context "with valid query parameters", focus: true do
+    it "handles a Selenium::WebDriver::Error::TimeoutOutError", focus: false do
+      Selenium::WebDriver::Wait.any_instance.stub(:until).and_raise(Selenium::WebDriver::Error::TimeOutError)
+      @semester = 'FA13'
+      @section = 72
+      @session = 'D'
+      an_mlp_query = MlpQuery.create(
+        mlp_login_email: ENV["MLP_LOGIN_EMAIL"],
+        section: @section,
+        semester: @semester,
+        class_stop:  Time.new(2013,12,17,11,30,0,"-05:00"),
+        class_start: Time.new(2013,11,14,9,30,0,"-05:00"),
+        session: @session)
+      expect(an_mlp_query.results(ENV["MLP_PASSWORD"])).to eq "the MLP database query timed out - you may succeed if you try again"
+    end
+
+    context "with valid query parameters", focus: false do
       before(:all) do
         @semester = 'FA13'
         @section = 72
         @session = 'D'
         an_mlp_query = MlpQuery.create(
-          mlp_login_email: 'bhf2689@email.vccs.edu',
+          mlp_login_email: ENV["MLP_LOGIN_EMAIL"],
           section: @section,
           semester: @semester,
           class_stop:  Time.new(2013,12,17,11,30,0,"-05:00"),
           class_start: Time.new(2013,11,14,9,30,0,"-05:00"),
           session: @session)
-        @table_valid = an_mlp_query.results("073156")
+        @table_valid = an_mlp_query.results(ENV["MLP_PASSWORD"])
       end
         it "returns rows sorted by :percent" do
         the_percents = []
@@ -148,9 +163,10 @@ describe MlpQuery do
         end
       end
 =end
-      it "returns a :logoff of class Time" do
+      it "returns a :logoff of class ActiveSupport::TimeWithZone" do
         (0...@table_valid[:progress].keys.count).each do |i| # which value.count to use does not matter since all should be the same
-          expect((if @table_valid[:progress][i][:logoff]=="" then Time else @table_valid[:progress][i][:logoff].class end)).to eq(Time)
+          expect((if @table_valid[:progress][i][:logoff]=="" then ActiveSupport::TimeWithZone
+                  else @table_valid[:progress][i][:logoff].class end)).to eq(ActiveSupport::TimeWithZone)
         end
       end
 =begin
@@ -318,9 +334,9 @@ describe MlpQuery do
         end
       end
 
-      it "returns a :logoff of class Time" do
+      it "returns a :logoff of class ActiveSupport::TimeWithZone" do
         (0...@table_example[:progress].keys.count).each do |i| # which value.count to use does not matter since all should be the same
-          expect((@table_example[:progress][i][:logoff].class)).to eq(Time)
+          expect((@table_example[:progress][i][:logoff].class)).to eq(ActiveSupport::TimeWithZone)
         end
       end
 

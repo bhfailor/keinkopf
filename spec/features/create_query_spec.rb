@@ -25,6 +25,16 @@ feature "Query Management" do
     # save_and_open_page
   end
 
+  scenario "handles a Selenium::WebDriver::Error::TimeoutOutError", focus: true do
+    Selenium::WebDriver::Wait.any_instance.stub(:until).and_raise(Selenium::WebDriver::Error::TimeOutError)
+    click_button 'okay'
+    click_link 'submit this query'
+    expect(page).to have_css 'input [name="pswd"] [type="password"]'
+    fill_in 'password:', with: 'anything'
+    click_button 'submit'
+    expect(page).to have_content "the MLP database query timed out - you may succeed if you try again"
+  end
+
   scenario "handles invalid credentials" do
     click_button 'okay'
     click_link 'submit this query'
@@ -44,18 +54,16 @@ feature "Query Management" do
     expect(page).to have_content 'no mte matches - please confirm semester, section, and session'
   end
 
-  scenario "submits a query with password 'example'", focus: true do
+  scenario "submits a query with password 'example'", focus: false do
     click_button 'okay'
     click_link 'submit this query'
     expect(page).to have_css 'input [name="pswd"] [type="password"]'
     fill_in 'password:', with: 'example'
     click_button 'submit'
     expect(page).to have_content "Summary Table" # main title
-    expect(page).to have_content Time.now.to_s[0..12] # subtitle contains current datetime
-    expect(page).to have_content /hw%\s+name\s+mte\s+cur assign\s+cfrac\s+dsl\s+htg\s+email/ # table header
-    save_and_open_page
-    binding.pry
+    expect(page).to have_content Time.now.in_time_zone("Eastern Time (US & Canada)").to_s[0..12] # subtitle contains current datetime
+    expect(page).to have_content /hw% name mte current assignment correct\b\/total days sincelogoff hours to go\b\(estimate\) email/
 
   end
-  scenario "returns results for valid credentials and valid query parameters"
+  # scenario "returns results for valid credentials and valid query parameters" # not needed => view is same as for password: "example"
 end

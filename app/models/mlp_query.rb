@@ -33,9 +33,11 @@ class MlpQuery < ActiveRecord::Base
       progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
 
       new_title = new_title+" - Elapsed time percent: #{mlp_results[:elapsed_time_percent]}"
-      return {:title => new_title,
+
+      @results_hash = {:title => new_title,
         :progress => progress,
         :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
+      return @results_hash
     end
 
     myheadless = Headless.new
@@ -193,14 +195,18 @@ class MlpQuery < ActiveRecord::Base
       progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
 
     new_title = new_title+" - Elapsed time percent: #{percent_elapsed_time}"
-    results_hash = {:title => new_title,
+    @results_hash = {:title => new_title,
       :progress => progress,
       :elapsed_time_percent => percent_elapsed_time
     }
-    #binding.pry
-    driver.quit
-    myheadless.destroy
-    results_hash
+    return @results_hash # normal return and save the results that took so long to generate!
+
+  rescue Selenium::WebDriver::Error::TimeOutError => e
+    return "the MLP database query timed out - you may succeed if you try again"
+  ensure
+    driver.quit unless driver.nil?
+    myheadless.destroy unless myheadless.nil?
+
   end
   def fake_mlp_results(quantity)
     assignment_name = [
@@ -303,7 +309,7 @@ class MlpQuery < ActiveRecord::Base
       status << calculated_status(hw_completed_percent, elapsed_time_percent)
 
       # Generate logoff scaled from now to class start based on elapsed_time_percent (about 2.6 million seconds in a session)
-      dttm << Time.now() - elapsed_time_percent.to_f*2600000.0/100.0*rand #
+      dttm << (Time.now() - elapsed_time_percent.to_f*2600000.0/100.0*rand).in_time_zone("Eastern Time (US & Canada)")
 
     end
     # Return a hash that includes mte, assignment_name, assignment_completed_fraction, hw_completed_percent, elapsed_time_percent,
@@ -334,8 +340,7 @@ class MlpQuery < ActiveRecord::Base
     mlp_time =~ /^(\d+)\/(\d+)\/(\d+)\W(\d+):(\d+)(a|p)m$/
     hour = $4.to_i + if $6 == "a" then 0 else 12 end # assume "p" if not "a"
     hour = hour - 12 if hour % 12 == 0 # edge cases of noon and midnight
-    Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00") # use "-05:00" for EST but actually want Eastern Time adjusted for DST so:
-    #Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0).in_time_zone("Eastern Time (US & Canada)")
+    Time.new(2000+($3.to_i),$1.to_i,$2.to_i,hour,$5.to_i,0,"-05:00").in_time_zone("Eastern Time (US & Canada)") # will adjust for DST!
   end
   def hash_columns_to_rows(a_hash)
     the_keys = a_hash.keys
