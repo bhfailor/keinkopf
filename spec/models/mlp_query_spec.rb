@@ -239,7 +239,7 @@ describe MlpQuery do
         expect(an_mlp_query.results("073156")).to eq 'no mte matches - please confirm semester, section, and session'
       end
     end
-    context "with a password of :example", focus: true do
+    context "with a password of :example", focus: false do
       before(:each) do
         @the_parameters = {
           mlp_login_email: 'bhf2689@email.vccs.edu',

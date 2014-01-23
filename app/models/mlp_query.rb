@@ -43,7 +43,7 @@ class MlpQuery < ActiveRecord::Base
     myheadless = Headless.new
     myheadless.start
     driver = Selenium::WebDriver.for :firefox
-    wait = Selenium::WebDriver::Wait.new(:timeout => 30) # seconds
+    wait = Selenium::WebDriver::Wait.new(:timeout => 20) # seconds
     # find the elapsed time percent
     percent_elapsed_time = (100.0*(Time.now()-class_start)/(class_stop-class_start)).to_i
     driver.navigate.to 'http://wytheville.mylabsplus.com'
@@ -69,7 +69,7 @@ class MlpQuery < ActiveRecord::Base
     select2 = driver.find_elements(:tag_name, "frame")
     @tree = select2[1][:name] #  => "Tree"
     driver.switch_to.frame select2[1] #  => ""
-#    binding.pry
+    # binding.pry
     wait.until { driver.find_element(:link_text,'MML Instructor Tools*') }
     driver.find_element(:link_text,'MML Instructor Tools*').click
 
@@ -94,14 +94,17 @@ class MlpQuery < ActiveRecord::Base
     wait.until { driver.find_element(:link_text,"All Assignments") }
     wait.until { driver.title }
     @title = driver.title
+    instructor_name = @title.match(/^Gradebook - (.+)$/)[1]
     # collect the different courses in the gradebook listed as options of a select element
     options = driver.find_elements(:css,'option')
     #binding.pry
     mte_numbers = [] ; indices = []
     (0...options.count).each do |index|
-      if options[index][:text] =~ /^Member: #{semester}MTE(\d)#{session}-#{section}/
+      if ( options[index][:text] =~ /^Member: #{semester}MTE(\d)#{session}-#{section}/ ) ||
+          ( options[index][:text] =~ /^#{semester}MTE(\d)#{session}-#{section}/ )
         an_mte_number = $1
-        if options[index][:text] =~ /^Member.+ \[(\d+)\] -.+$/
+        if ( options[index][:text] =~ /^Member.+ \[(\d+)\] -.+$/ ) ||
+            ( options[index][:text] =~ /^#{semester}.+ \[(\d+)\]$/ )
           # binding.pry
           if $1.to_i > 0 # must have at least one course member!
             mte_numbers << an_mte_number
@@ -139,10 +142,13 @@ class MlpQuery < ActiveRecord::Base
         mte_number << mte_numbers[course_index]
         # go into details
         #binding.pry # confirm link is present
-        driver.find_element(:css,'#ctl00_MasterContent_OverallDetailsLink > li:nth-child(1) > a:nth-child(1)').click
-        wait.until { driver.find_element(:css,'#ctl00_MasterContent_OverallScoreGrid > tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(8)') }
+        driver.find_element(:css,'#ctl00_ctl00_InsideForm_MasterContent_OverallDetailsLink > li:nth-child(1) > a:nth-child(1)').click
+#        driver.find_element(:css,'#ctl00_MasterContent_OverallDetailsLink > li:nth-child(1) > a:nth-child(1)').click
+        #binding.pry
+        css_tw = '#ctl00_ctl00_InsideForm_MasterContent_OverallScoreGrid > tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(8)'
+        wait.until { driver.find_element(:css, css_tw) }
         time_worked_on_hw =
-          driver.find_element(:css,'#ctl00_MasterContent_OverallScoreGrid > tbody:nth-child(2) > tr:nth-child(1) > td:nth-child(8)').text
+          driver.find_element(:css, css_tw).text
         # assuming 3 possibilities: h and m, just m, and just h
         time_worked_decimal_hours =  if time_worked_on_hw.match(/(\d+)h (\d*)m/) then
                                        (time_worked_on_hw.match(/(\d+)h (\d*)m/).captures[1].to_f/60.0)+$1.to_f
@@ -152,28 +158,31 @@ class MlpQuery < ActiveRecord::Base
                                        (time_worked_on_hw.match(/(\d*)h/).captures[0].to_f)
                                      end
         # assume element is visible since the previous find_element call succeeded
-
-        if driver.find_elements(:css,'#ctl00_MasterContent_TDHomework > span:nth-child(1) > a:nth-child(1) > div:nth-child(2) > div:nth-child(1)').count != 0
-          style = driver.find_element(:css,'#ctl00_MasterContent_TDHomework > span:nth-child(1) > a:nth-child(1) > div:nth-child(2) > div:nth-child(1)')[:style]
+        css_hcp = '#ctl00_ctl00_InsideForm_MasterContent_TDHomework > span:nth-child(1) > a:nth-child(1) > div:nth-child(2) > div:nth-child(1)'
+        if driver.find_elements(:css, css_hcp).count != 0
+          style = driver.find_element(:css, css_hcp)[:style]
           homework_completed_percentage << (style.match(/^height: (\d+)px/).captures[0].to_f/90.0*100.0).to_i
         else homework_completed_percentage << 0 end
         estimated_hours_to_complete << if homework_completed_percentage.last == 0 then "NA" else
           ((100-homework_completed_percentage.last).to_f*time_worked_decimal_hours/homework_completed_percentage.last.to_f).round(1) end
         # go into email
         #binding.pry
-        driver.find_element(:css,'#ctl00_MasterContent_StudentPager1_EmailStudentLink').click
+        driver.find_element(:css,'#ctl00_ctl00_InsideForm_MasterContent_StudentPager1_EmailStudentLink').click
         driver.switch_to.window driver.window_handles.last # switch to most recenty opened window
         #binding.pry
-        wait.until { driver.find_element(:css,'#ctl00_MasterContent_TextBoxTo') }
-        full_email_address = driver.find_element(:css,'#ctl00_MasterContent_TextBoxTo')[:value] # grab email address
+        css_to_box = '#ctl00_ctl00_InsideForm_MasterContent_TextBoxTo'
+
+        wait.until { driver.find_element(:css, css_to_box) }
+        full_email_address = driver.find_element(:css, css_to_box)[:value] # grab email address
         email_prefix <<  (full_email_address["@email.vccs.edu"] = ""; full_email_address) # remove domain information
-        driver.find_element(:css,'#Math_NativeCancel_Normal').click # cancel email message - should close window as well
+        driver.find_element(:css,'#btnCancel').click # cancel email message - should close window as well
         driver.switch_to.window driver.window_handles.last
         #binding.pry # confirm can see the following link before clicking on it:
         status << calculated_status(homework_completed_percentage.last, percent_elapsed_time)
         driver.switch_to.window(driver.window_handles[1]) # Ignore the "Flash Needed. . ." popup in case it appears
-        wait.until { driver.find_element(:css,'#ctl00_LnkBackGradebook') }
-        driver.find_element(:css,'#ctl00_LnkBackGradebook').click
+        css_linkback = '#ctl00_ctl00_InsideForm_LnkBackGradebook'
+        wait.until { driver.find_element(:css, css_linkback) }
+        driver.find_element(:css, css_linkback).click
       end
     end
     # UTC is Universal Time Coordinated, up to 1972 Greenwich Mean Time (GMT)
@@ -191,18 +200,22 @@ class MlpQuery < ActiveRecord::Base
       :status => status,
     }
 
-      temp = hash_columns_to_rows(progress)
-      progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
+    temp = hash_columns_to_rows(progress)
+    progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
+    # remove entries that contain the name of the teacher
+    temp = {}; progress.each_key {|k| temp[k] = progress[k] unless progress[k][:name] == instructor_name}
+    binding.pry
 
     new_title = new_title+" - Elapsed time percent: #{percent_elapsed_time}"
     @results_hash = {:title => new_title,
-      :progress => progress,
+      :progress => temp,
       :elapsed_time_percent => percent_elapsed_time
     }
     return @results_hash # normal return and save the results that took so long to generate!
 
   rescue Selenium::WebDriver::Error::TimeOutError => e
     return "the MLP database query timed out - you may succeed if you try again"
+
   ensure
     driver.quit unless driver.nil?
     myheadless.destroy unless myheadless.nil?
