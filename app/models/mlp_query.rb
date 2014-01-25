@@ -6,7 +6,7 @@ class MlpQuery < ActiveRecord::Base
   validates :session, presence: true
 
   def results(password)
-    require 'pry'
+    # require 'pry'
     require 'selenium-webdriver'
     require 'headless'
 
@@ -204,7 +204,7 @@ class MlpQuery < ActiveRecord::Base
     progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
     # remove entries that contain the name of the teacher
     temp = {}; progress.each_key {|k| temp[k] = progress[k] unless progress[k][:name] == instructor_name}
-    binding.pry
+    # binding.pry
 
     new_title = new_title+" - Elapsed time percent: #{percent_elapsed_time}"
     @results_hash = {:title => new_title,
