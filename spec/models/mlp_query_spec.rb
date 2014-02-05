@@ -236,7 +236,7 @@ describe MlpQuery do
           class_stop:  Time.new(2013,12,17, 11,30,0),
           class_start: Time.new(2013,11,14,9,30,0),
           session: 'InvalidSessionID')
-        expect(an_mlp_query.results("073156")).to eq 'no mte matches - please confirm semester, section, and session'
+          expect(an_mlp_query.results(ENV[MLP_PASSWORD])).to eq 'no mte matches - please confirm semester, section, and session'
       end
     end
     context "with a password of :example", focus: false do
