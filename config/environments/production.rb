@@ -9,7 +9,7 @@ KeinKopf::Application.configure do
   config.action_controller.perform_caching = true
 
   # Disable Rails's static asset server (Apache or nginx will already do this)
-  config.serve_static_assets = false
+  config.serve_static_assets = true # since this app has only a few users and not much time is spent serving assets!  Same setting as in development.
 
   # Compress JavaScripts and CSS
   config.assets.compress = true
