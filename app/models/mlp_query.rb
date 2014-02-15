@@ -6,7 +6,7 @@ class MlpQuery < ActiveRecord::Base
   validates :session, presence: true
 
   def results(password)
-    # require 'pry'
+    require 'pry'
     require 'selenium-webdriver'
     require 'headless'
 
@@ -174,6 +174,8 @@ class MlpQuery < ActiveRecord::Base
 
         wait.until { driver.find_element(:css, css_to_box) }
         full_email_address = driver.find_element(:css, css_to_box)[:value] # grab email address
+        # following line inserted because some individuals have @wcc instead of @email, i.e. jlachniet@wcc.vccs.edu - 20140215
+        full_email_address['wcc'] = 'email' if full_email_address.include? 'wcc'
         email_prefix <<  (full_email_address["@email.vccs.edu"] = ""; full_email_address) # remove domain information
         driver.find_element(:css,'#btnCancel').click # cancel email message - should close window as well
         driver.switch_to.window driver.window_handles.last
