@@ -1,4 +1,6 @@
 KeinKopf::Application.routes.draw do
+  get 'mlp_queries/sort_by_mte' => 'mlp_queries#sort_by_mte'
+  get 'mlp_queries/sort_by_hw' => 'mlp_queries#sort_by_hw'
   resources :mlp_queries
 
   get 'mlp_queries/cold_start' => 'mlp_queries#cold_start'

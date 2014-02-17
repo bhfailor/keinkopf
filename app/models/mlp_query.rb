@@ -5,6 +5,13 @@ class MlpQuery < ActiveRecord::Base
   validates :semester, presence: true
   validates :session, presence: true
 
+  def MlpQuery.sort_by_hw
+    @@results_hw_percent
+  end
+  def MlpQuery.sort_default
+    @@results_default
+  end
+
   def results(password)
     require 'pry'
     require 'selenium-webdriver'
@@ -30,14 +37,17 @@ class MlpQuery < ActiveRecord::Base
       }
 
       temp = hash_columns_to_rows(progress)
-      progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
-
+      @@progress_hw_percent = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
+      @@progress_default    = Hash[temp.sort_by {|k,v| v[:mte]}]
       new_title = new_title+" - Elapsed time percent: #{mlp_results[:elapsed_time_percent]}"
 
-      @results_hash = {:title => new_title,
-        :progress => progress,
+      @@results_default = {:title => new_title,
+        :progress => @@progress_default,
         :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
-      return @results_hash
+      @@results_hw_percent = {:title => new_title,
+        :progress => @@progress_hw_percent,
+        :elapsed_time_percent => mlp_results[:elapsed_time_percent]}
+      return @@results_default
     end
 
     myheadless = Headless.new
@@ -201,19 +211,24 @@ class MlpQuery < ActiveRecord::Base
       :fraction => last_assignment_fraction_completed,
       :status => status,
     }
-
+    # binding.pry
     temp = hash_columns_to_rows(progress)
-    progress = Hash[temp.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
     # remove entries that contain the name of the teacher
-    temp = {}; progress.each_key {|k| temp[k] = progress[k] unless progress[k][:name] == instructor_name}
+    @@progress_default = {}; temp.each_key {|k| @@progress_default[k] = temp[k] unless temp[k][:name] == instructor_name}
+
+    @@progress_hw_percent = Hash[@@progress_default.sort_by {|k,v| if v[:percent].class != Fixnum then -1 else v[:percent] end}]
     # binding.pry
 
     new_title = new_title+" - Elapsed time percent: #{percent_elapsed_time}"
-    @results_hash = {:title => new_title,
-      :progress => temp,
+    @@results_default = {:title => new_title,
+      :progress => @@progress_default,
       :elapsed_time_percent => percent_elapsed_time
     }
-    return @results_hash # normal return and save the results that took so long to generate!
+    @@results_hw_percent = {:title => new_title,
+      :progress => @@progress_hw_percent,
+      :elapsed_time_percent => percent_elapsed_time
+    }
+    return @@results_default # normal return and save the results that took so long to generate!
 
   rescue Selenium::WebDriver::Error::TimeOutError => e
     return "the MLP database query timed out - you may succeed if you try again"

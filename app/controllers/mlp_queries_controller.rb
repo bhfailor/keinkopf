@@ -109,4 +109,28 @@ class MlpQueriesController < ApplicationController
     end
     # default view generated
   end
+  def sort_by_hw
+    #require 'pry'
+    #binding.pry
+    @results = MlpQuery.sort_by_hw
+    #binding.pry
+    if (@results == 'login failed - please confirm MLP login email and password') ||
+       (@results == 'no mte matches - please confirm semester, section, and session') ||
+       (@results == 'the MLP database query timed out - you may succeed if you try again')
+      render action: "edit"
+    end
+    # default view generated
+  end
+  def sort_by_mte
+    #require 'pry'
+    #binding.pry
+    @results = MlpQuery.sort_default
+    #binding.pry
+    if (@results == 'login failed - please confirm MLP login email and password') ||
+       (@results == 'no mte matches - please confirm semester, section, and session') ||
+       (@results == 'the MLP database query timed out - you may succeed if you try again')
+      render action: "edit"
+    end
+    # default view generated
+  end
 end
