@@ -66,10 +66,11 @@ class MlpQuery < ActiveRecord::Base
     button[0].click # will work because array is returned for "...elements"
     wait.until { driver.title != "" }
     return 'login failed - please confirm MLP login email and password' unless driver.title == "Academics PSH"
-
-    the_link_css = "table.MainContentMainBg:nth-child(2) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody:nth-child(1) > tr:nth-child(6) > td:nth-child(1) > a:nth-child(3)"
-    wait.until { driver.find_element(:css,the_link_css) }
-    lnk = driver.find_element(:css,the_link_css)
+    #binding.pry
+    wait.until { course_links = driver.find_elements(:css,'a.MainContentLink') }
+    #wait.until { driver.find_element(:css,another_link_css) }
+    #lnk = driver.find_element(:css,another_link_css)
+    lnk = driver.find_elements(:css,'a.MainContentLink')[0]
     lnk.click
     wait.until {driver.find_elements(:tag_name, "frame")}
     select = driver.find_elements(:tag_name, "frame")
