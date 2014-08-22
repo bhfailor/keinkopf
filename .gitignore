@@ -16,3 +16,6 @@
 
 # Ignore backup files
 *~
+
+# Passwords and other info that I do not want to share
+/config/local_env.yml

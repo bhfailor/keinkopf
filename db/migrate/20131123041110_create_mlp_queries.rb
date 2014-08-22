@@ -1,4 +1,7 @@
 class CreateMlpQueries < ActiveRecord::Migration
+  class MlpQuery < ActiveRecord::Base
+  end
+
   def up
     create_table :mlp_queries do |t|
       t.string :session
@@ -13,10 +16,10 @@ class CreateMlpQueries < ActiveRecord::Migration
     end
 
     # create defaults for everything but section number and instructor credentials
-    MlpQuery.create session: 'D',
-                    class_start: '2013-11-14 09:30:00',
-                    class_stop:  '2013-12-17 11:30:00',
-                    semester: 'FA13'
+    # MlpQuery.create session: 'D',
+    #                class_start: '2013-11-14 09:30:00',
+    #                class_stop:  '2013-12-17 11:30:00',
+    #                semester: 'FA13'
 
   end
 

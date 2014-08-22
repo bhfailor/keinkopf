@@ -9,7 +9,7 @@ gem 'sqlite3'
 
 # additional gems for data scraping and debugging
 gem 'pry'
-gem 'selenium-webdriver'
+gem 'selenium-webdriver', '2.42.0'
 gem 'headless'
 
 # Gems used only for assets and not required

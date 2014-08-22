@@ -97,13 +97,13 @@ describe MlpQuery do
           session: @session)
         @table_valid = an_mlp_query.results(ENV["MLP_PASSWORD"])
       end
-        it "returns rows sorted by :percent" do
+        it "returns rows not sorted by :percent since default is by mte number", focus: true do
         the_percents = []
         @table_valid[:progress].keys.each do |a_key|
           # binding.pry
           the_percents << if @table_valid[:progress][a_key][:percent].class != Fixnum then -1 else @table_valid[:progress][a_key][:percent] end
         end
-        expect(the_percents.sort).to eq(the_percents)
+        expect(the_percents.sort).to_not eq(the_percents)
       end
       it "returns a hash with the appropriate keys" do
         @table_valid.should include(:title, :progress, :elapsed_time_percent)
@@ -228,7 +228,7 @@ describe MlpQuery do
           session: 'D')
         expect(an_mlp_query.results("wrong_password")).to eq 'login failed - please confirm MLP login email and password'
       end
-      it "returns an error message if no courses match the query criteria" do
+      it "returns an error message if no courses match the query criteria", focus: false do
         an_mlp_query = MlpQuery.create(
           mlp_login_email: 'bhf2689@email.vccs.edu',
           section: 72,
@@ -252,13 +252,13 @@ describe MlpQuery do
         an_mlp_query = MlpQuery.new(@the_parameters)
         @table_example = an_mlp_query.results("example")
       end
-      it "returns rows sorted by :percent" do
+      it "returns rows not sorted by :percent by default" do
         the_percents = []
         @table_example[:progress].keys.each do |a_key|
           # binding.pry
           the_percents << if @table_example[:progress][a_key][:percent].class != Fixnum then -1 else @table_example[:progress][a_key][:percent] end
         end
-        expect(the_percents.sort).to eq(the_percents)
+        expect(the_percents.sort).to_not eq(the_percents) # default result is sorted by mte
       end
       it "returns a hash with the appropriate keys" do
         @table_example.should include(:title, :progress, :elapsed_time_percent)
