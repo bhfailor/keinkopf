@@ -26,28 +26,17 @@ feature "Unsorted or sorted by HW percent complete using real data" do
     expect(page).to have_content /hw% name mte current assignment correct\b\/total days sincelogoff hours to go\b\(estimate\) email/
   end
 
-  scenario "the table is initially sorted by increasing mte number" do
+  scenario "the table is initially sorted by increasing mte number but can be toggled with hw percent" do
     # binding.pry
     expect(page).to have_content 'mte'
     mtevals = []
     all('tr > td:nth-child(3)').each {|r| mtevals << r.text }
     expect(mtevals).to eq mtevals.sort
-    #save_and_open_page
-  end
-
-  scenario "but the table can be displayed, sorted by increasing hw percent completed" do
-    # binding.pry
-    expect(page).to have_content 'mte'
     expect(page).to have_link 'sort by hw percent completed'
     click_link 'sort by hw percent completed'
     hwpercent = []
     all('tr > td:nth-child(1)').each {|r| hwpercent << r.text.to_i }
     expect(hwpercent).to eq hwpercent.sort
-    #save_and_open_page
-  end
-
-  scenario "and it can be sorted by increasing mte number again" do
-    click_link 'sort by hw percent completed'
     expect(page).to have_link 'sort by mte (default)'
     click_link 'sort by mte (default)'
     mtevals = []
